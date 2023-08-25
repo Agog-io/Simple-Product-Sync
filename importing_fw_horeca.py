@@ -271,8 +271,8 @@ class horeca_Import:
         transport = None
         sftp = None
         try:
-            transport = paramiko.Transport(('domain', 22))
-            transport.connect(username = 'username', password = 'password')
+            transport = paramiko.Transport((self.config_data["sftp"]['host'], 22))
+            transport.connect(username = self.config_data["sftp"]['username'], password = self.config_data["sftp"]['password'])
             sftp = paramiko.SFTPClient.from_transport(transport)
             
         except Exception as error:
