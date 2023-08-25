@@ -1,0 +1,10 @@
+/config.json
+/dist
+/__pycache__
+/scrape_gtsa_porselanes.py
+/scrape_gtsa_lecoq_pr.py
+/gtsa_subcat.py
+/gtsa_gonikes.spec
+/gtsa_full.py
+/emko_full.py
+/build
