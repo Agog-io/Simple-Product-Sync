@@ -21,5 +21,10 @@
         "charset":"utf8",
         "read_timeout":15,
         "write_timeout":15
+    },
+    "sftp" :{
+        "host" : "---",
+        "username" : "---",
+        "password" : "---"
     }
 }
