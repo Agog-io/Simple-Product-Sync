@@ -136,7 +136,7 @@ class scraping_example:
 
             prodata['catid'] = idcat
             image_tag = product.select_one('img')
-            print(image_tag)
+
             #todo remove the comma separated images field
             prodata['images'] = image_tag['src']
             prodata['imageList'] = [image_tag['src']]
@@ -145,7 +145,7 @@ class scraping_example:
             prodata['manufacturer'] = self.sync_instance.siteName
             
             # todo translate to english
-            # items per pack 
+            # "syskevasia" means items per pack 
             prodata['syskevasia'] = 1
             
             original_price_tag = product.select_one(".compare-at-amount")
@@ -164,6 +164,9 @@ class scraping_example:
             # add images to product into db and FTP server using the id of the prod
 
             self.sync_instance.saveImages(prodata,idprod)
+            level = logging.INFO
+            logger.log(level,'DONE : '+prodata['name'])    
+
         
         self.stopSync()
 
