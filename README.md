@@ -4,6 +4,7 @@
 Simple Product Sync App with a logging window that abstracts the insertion and updating of data and images. 
 
 Contains example that scrapes a webpage and passes it into the library.
+![image](https://github.com/Agog-io/Simple-Product-Sync/assets/63949183/6dcbf1ab-ac67-46d4-b126-c055b9da8d85)
 
 ## The problem
 Working on a e-commerce site with a lot of affiliate shops , I was tasked with creating an automated proccess of creating and updating the products our affiliate shops provided us on our e-commerce site. Those shop usually lacked any kind of structured data , other than their website .  This project started as a simple python scraping app that took this data and inserted it to a .xls file that the site then parsed, but this solution proved problematic as it bombarded our websites server with both database and ftp traffic , as well as all the update logic that comes with updating products , categories and images. Our server provider also has a policy against mass web scraping which meant we had to move all the http calls outside the server our site run on as more and more affiliate shops were being added. 
