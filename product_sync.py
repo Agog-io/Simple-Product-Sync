@@ -4,6 +4,7 @@ from logging_window import *
 import paramiko
 import os
 from urllib.parse import urlparse
+from os.path import exists
 import shutil
 import time
 import socket
@@ -16,8 +17,14 @@ class product_sync:
     def __init__(self):
         self.isDemo = False;
         config_file = Path(__file__).with_name('config.json')
-        with config_file.open('r') as f:
-            self.config_data = json.load(f)
+        if exists(config_file):
+            with config_file.open('r') as f:
+                self.config_data = json.load(f)
+        else:
+            config_file = Path(__file__).with_name('config copy.json')
+            with config_file.open('r') as f:
+                self.config_data = json.load(f)
+
         #Helps with long response times on slow servers
         HTTPConnection.default_socket_options = (
             HTTPConnection.default_socket_options + [
