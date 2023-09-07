@@ -1,21 +1,38 @@
+# --External Libraries--
 import requests
-from requests_toolbelt.multipart.encoder import MultipartEncoder
-from logging_window import *
+# Requests : Used for downloading web pages
 import paramiko
+# Paramiko : SFTP client for uploading images
 import os
+# OS : Operating System Helper Lib
 from urllib.parse import urlparse
+# urlparse : Get file data from its url
 from os.path import exists
+# exists : check if file exists in local directory
 import shutil
+# shutil : High level file operations , used for moving files in this case
 import time
+# time : Standard time lib, used for waiting between failed requests
 import socket
+# socket : Used to get some constants , to make HTTP request more 
+# stable by enabling KEEPALIVE
 from urllib3.connection import HTTPConnection
+# HTTPConnection : Used to configure HTTP request made by this program
 import pymysql
+# Python Mysql Inteface 
 import json
+# to read config file
 from pathlib import Path
+# to get the relative path of this file
+# --//--
+
+from logging_window import *
+# Logging window implementation 
 
 class product_sync:
     def __init__(self):
         self.isDemo = False;
+        #setting up some constants like connection details
         config_file = Path(__file__).with_name('config.json')
         if exists(config_file):
             with config_file.open('r') as f:
@@ -40,20 +57,21 @@ class product_sync:
         self.session.headers = self.config_data["headers_http"];
         self.do_retries = True
 
-
     def logForDemo(self , logText):
         logfile = Path(__file__).with_name('logDatabase.txt')
         with logfile.open('a+') as f:
             f.write(logText+"\n")
+
+
     # Every database , http and ftp call has retry functionality due to the 
     # inconsistency of both the host and the server connections. When do_retries
     # go false that means a certain threshold of retrying has been reached in any
     # of those connections that warrants the whole program to halt , or that the user
     # has closed the program window.
-
     def stopUpdating(self):
         self.do_retries = False
 
+    # Retrieves mySQL connection
     def getConnection(self , retries = 0):
         
         if self.isDemo :
@@ -137,9 +155,6 @@ class product_sync:
         mycursor.close()
         mydb.close()
         return result
-
-    def logIntoWindow(self , error , iscrit = False):
-        windowHelpers.logIntoWindow(error , iscrit)
 
     def queryDb(self , sql , val = [] , retries = 0):
 
@@ -395,15 +410,6 @@ class product_sync:
         val = [source]
         self.queryDb(sql , val)        
 
-    def initProgressBar(self , count):
-        windowHelpers.getThirdUi().countInDb = count
-        windowHelpers.getThirdUi().started = time.time()
-        windowHelpers.getThirdUi().progress()
-
-    def updateProgressBar(self):
-        windowHelpers.getThirdUi().countNow += 1
-        windowHelpers.getThirdUi().progress()
-
     def ParceSourceMissing(self , source):
 
         self.logIntoWindow("Finalize Db For Import Job" , True);
@@ -535,7 +541,20 @@ class product_sync:
         # else:
             # insertCatRel(idprod , proddata)
 
+    #inits the application , as well as the log window
     def initAppl(self , source , updateClass ):
         windowHelpers.initLog(source , updateClass , self.initSourceMissing)
+    
+    #wrapper for logging into the log window
+    def logIntoWindow(self , error , iscrit = False):
+        windowHelpers.logIntoWindow(error , iscrit)
 
 
+    def initProgressBar(self , count):
+        windowHelpers.getThirdUi().countInDb = count
+        windowHelpers.getThirdUi().started = time.time()
+        windowHelpers.getThirdUi().progress()
+
+    def updateProgressBar(self):
+        windowHelpers.getThirdUi().countNow += 1
+        windowHelpers.getThirdUi().progress()
