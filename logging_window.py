@@ -98,7 +98,7 @@ class FormUi:
         # ttk.Entry(self.frame, textvariable=self.message, width=25).grid(column=1, row=1, sticky=(W, E))
         # Add a button to log the message
         global button
-        button = ttk.Button(self.frame, text='Αρχή ' + source, command=windowHelpers.callableFunct)
+        button = ttk.Button(self.frame, text='Start ' + source, command=windowHelpers.callableFunct)
         button.grid(column=1, row=2, sticky=W)
 
     def submit_message(self):
@@ -112,7 +112,7 @@ class ThirdUi:
     def __init__(self, frame):
         self.frame = frame
         # ttk.Label(self.frame, text='This is just an example of a third frame').grid(column=0, row=1, sticky=W)
-        self.label = ttk.Label(self.frame, text='Εδώ θα φανεί η πορεία του import')
+        self.label = ttk.Label(self.frame, text='The progress of the import will be displayed here')
         self.label.grid(column=0, row=4, sticky=W)
         self.pb = ttk.Progressbar(
             self.frame,
@@ -144,7 +144,7 @@ class ThirdUi:
         prog = float("{:.2f}".format(prog))
         self.prog = prog
         self.pb['value'] = prog
-        self.label['text'] = str(self.countNow) + " / " + str(self.countInDb) + ' εχουν ενημερωθεί ('+str(self.prog)+'%)' + ' , απομένουν '+ str(datetime.timedelta(seconds=secsToGo)) + ' (περίπου στις '+ str(dt_object) +'), εχουν περάσει '+ str(datetime.timedelta(seconds=math.ceil(diftime)))
+        self.label['text'] = str(self.countNow) + " / " + str(self.countInDb) + ' have been updated ('+str(self.prog)+'%)' + ' , remain '+ str(datetime.timedelta(seconds=secsToGo)) + ' (apx. at '+ str(dt_object) +'), Time Passed : '+ str(datetime.timedelta(seconds=math.ceil(diftime)))
 
 
 
@@ -154,7 +154,7 @@ class App:
     def __init__(self, root , source ):
         # global Third
         self.root = root
-        root.title('Logging Handler')
+        root.title(source+' Sync')
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         # Create the panes and frames
@@ -162,14 +162,14 @@ class App:
         vertical_pane.grid(row=0, column=0, sticky="nsew")
         horizontal_pane = ttk.PanedWindow(vertical_pane, orient=HORIZONTAL)
         vertical_pane.add(horizontal_pane)
-        form_frame = ttk.Labelframe(horizontal_pane, text="Δράσεις")
+        form_frame = ttk.Labelframe(horizontal_pane, text="Actions")
         form_frame.columnconfigure(1, weight=1)
         horizontal_pane.add(form_frame, weight=1)
         console_frame = ttk.Labelframe(horizontal_pane, text="Console")
         console_frame.columnconfigure(0, weight=1)
         console_frame.rowconfigure(0, weight=1)
         horizontal_pane.add(console_frame, weight=1)
-        third_frame = ttk.Labelframe(vertical_pane, text="Πορεία")
+        third_frame = ttk.Labelframe(vertical_pane, text="Progress")
         vertical_pane.add(third_frame, weight=1)
         # Initialize all frames
         self.form = FormUi(form_frame , source )
@@ -188,25 +188,26 @@ class App:
 
 
 class ImportProc(threading.Thread):
-    def __init__(self , source , start , stop , init ):
+    def __init__(self , source , updateClass , init ):
         super().__init__()
-        
-        self._start_funct = start
+
+        self.updateClass = updateClass
+        # self._start_funct = start
         self._source = source
-        self._stop_func = stop
+        # self._stop_func = stop
         self._init_func = init
         self._stop_event = threading.Event()
 
     def run(self):
-        logger.debug('import Started')
-        self._start_funct()
+        logger.log(logging.INFO,'import Started')
+        self.updateClass.doSync()
     
     def init(self):
-        logger.debug('Init Import Started')
+        logger.log(logging.INFO,'Init Import Started')
         self._init_func(self._source)
 
     def stop(self):
-        self._stop_func()
+        self.updateClass.stopSync()
         self._stop_event.set()
 
 class windowHelpers():
@@ -215,7 +216,7 @@ class windowHelpers():
         global Third
         return Third
     
-    def initLog(source  , importFunct , stopFunct , start):
+    def initLog(source  , updateClass , start):
         
         logging.basicConfig(level=logging.DEBUG)
         root = tk.Tk()
@@ -227,7 +228,7 @@ class windowHelpers():
         global importProcInst
         global Third
         Third = app.third
-        importProcInst = ImportProc(source , importFunct , stopFunct, start )
+        importProcInst = ImportProc(source , updateClass , start )
         
         
         app.root.mainloop()

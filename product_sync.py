@@ -12,8 +12,9 @@ import pymysql
 import json
 from pathlib import Path
 
-class horeca_Import:
+class product_sync:
     def __init__(self):
+        self.isDemo = False;
         config_file = Path(__file__).with_name('config.json')
         with config_file.open('r') as f:
             self.config_data = json.load(f)
@@ -33,18 +34,24 @@ class horeca_Import:
         self.do_retries = True
 
 
-
+    def logForDemo(self , logText):
+        logfile = Path(__file__).with_name('logDatabase.txt')
+        with logfile.open('a+') as f:
+            f.write(logText+"\n")
     # Every database , http and ftp call has retry functionality due to the 
     # inconsistency of both the host and the server connections. When do_retries
     # go false that means a certain threshold of retrying has been reached in any
     # of those connections that warrants the whole program to halt , or that the user
     # has closed the program window.
 
-    def stopBoRetries(self):
+    def stopUpdating(self):
         self.do_retries = False
 
     def getConnection(self , retries = 0):
         
+        if self.isDemo :
+            return
+
         mydb = None
         if self.do_retries == False:
             exit()
@@ -82,7 +89,11 @@ class horeca_Import:
 
         if self.do_retries == False:
             exit()
-            
+
+        if self.isDemo :
+            self.logForDemo(sql)
+            return
+
         mydb = self.getConnection()
 
         mycursor = mydb.cursor()
@@ -127,7 +138,11 @@ class horeca_Import:
 
         if self.do_retries == False:
             exit()
-            
+        
+        if self.isDemo :
+            self.logForDemo(sql)
+            return
+        
         mydb = self.getConnection()
         mycursor = mydb.cursor()
         try:
@@ -177,6 +192,12 @@ class horeca_Import:
 
     def checkAndAddImageToCDN(self, source_id , idprod , imageurl, idimg ,source_dir):
         check = self.fetchFromDb("SELECT * FROM `extern_images` WHERE sourceid LIKE \""+str(source_id)+"\" AND imageurl LIKE \""+imageurl+"\" AND prodid = "+str(idprod)+";");
+        
+        
+        if self.isDemo :
+            self.logIntoWindow("IMGDL : 1) IDPROD : "+str(idprod)+" downloaded "+imageurl , True)
+            return
+        
         if len(check):
             if check[0]['serverpath'] :
                 print('has been downloaded dont do anything')
@@ -237,10 +258,14 @@ class horeca_Import:
             return self.saveFileSftp(imageserver , r , retriesn)
 
     def checkAddSourceToDb(self , source_name):
+      
+        
         check = self.fetchFromDb("SELECT * FROM `extern_sources` WHERE `source` LIKE \""+str(source_name)+"\";")
         # print("SELECT * FROM `extern_sources` WHERE \"source\" LIKE \""+str(source_name)+"\";");
         # print(len(check))
-        
+      
+        if self.isDemo :
+            return 1  
         if len(check):
             return check[0]['id']
         
@@ -251,6 +276,9 @@ class horeca_Import:
         return self.checkAddSourceToDb(source_name)
 
     def checkAndAddImageToDb(self , source_id , idprod , imageurl):
+        if self.isDemo :
+            return 1
+        
         check = self.fetchFromDb("SELECT * FROM `extern_images` WHERE sourceid LIKE \""+str(source_id)+"\" AND imageurl LIKE \""+imageurl+"\" AND prodid = "+str(idprod)+";");
         if len(check):
             
@@ -268,6 +296,9 @@ class horeca_Import:
             return self.checkAndAddImageToDb(source_id , idprod , imageurl);
     
     def saveImages(self , proddata , idprod , retries = 1):
+        if self.isDemo :
+            return
+
         transport = None
         sftp = None
         try:
@@ -344,25 +375,18 @@ class horeca_Import:
         # except IOError:
         #     sftp.mkdir(source_dir)  # Create remote_path
         #     sftp.chdir(source_dir)
+    
     def initSourceMissing(self , source):
-        self.logIntoWindow("Initializing Db For Import Job" , True);
+        self.logIntoWindow("Initializing Db For Import Job" , False);
+
         check = self.fetchFromDb("SELECT COUNT(*) as cnt FROM `extern_products` WHERE source LIKE \""+source+"\" ;");
-        self.initProgressBar( check[0]['cnt'] )
+        if self.isDemo :
+            self.initProgressBar( 3 )
+        else:
+            self.initProgressBar( check[0]['cnt'] )
         sql = "UPDATE `extern_products` SET `found` = '0' WHERE `extern_products`.`source` LIKE %s;"
         val = [source]
-        self.queryDb(sql , val)
-        
-        # sql = "UPDATE `extern_relations` SET `found` = '0' WHERE `extern_relations`.`found` = 1 AND `extern_relations`.`source` LIKE %s;"
-        # val = [source]
-        # try:
-        #     mycursor.execute(sql , val)
-
-    
-        # except:
-
-        #     logIntoWindow("An exception initSourceMissing2")
-        #     logIntoWindow((sql , val))
-        #     exit()
+        self.queryDb(sql , val)        
 
     def initProgressBar(self , count):
         windowHelpers.getThirdUi().countInDb = count
@@ -374,6 +398,7 @@ class horeca_Import:
         windowHelpers.getThirdUi().progress()
 
     def ParceSourceMissing(self , source):
+
         self.logIntoWindow("Finalize Db For Import Job" , True);
 
         sql = "UPDATE `extern_products` SET `found` = 2   WHERE `extern_products`.`found` = 0 AND `extern_products`.`source` LIKE  %s;"
@@ -387,6 +412,7 @@ class horeca_Import:
         self.queryDb(sql , val)
 
     def initImportState(self, source):
+
         self.checkAddSourceToDb(source)
         sql = "UPDATE `extern_products` SET `parsed` = '0' WHERE `extern_products`.`source` LIKE %s;"
         val = [source]
@@ -396,13 +422,18 @@ class horeca_Import:
         self.queryDb(sql , val)
 
     def addCatToDb(self , catname , catpath , parent  , source , link):
-
         sql = 'INSERT INTO `extern_cats` (`id`, `source`, `fullpath`, `name`, `parent_id` , `url` ) VALUES (NULL, %s, %s, %s, %s , %s);';
         val = (source , catpath , catname , str(parent) , link)
         self.queryDb(sql , val)
 
     def checkAndAddCatToDb(self, catname , catpath , parent  , source , link):
+
         check = self.fetchFromDb("SELECT * FROM `extern_cats` WHERE source LIKE \""+source+"\" AND fullpath = \""+catpath+"\";");
+        if self.isDemo :
+            self.logIntoWindow("CTG : EXISTS " + catpath);
+            self.addCatToDb(catname , catpath , parent  , source , link)
+            return 1
+
         if len(check):
             # print(check)
             self.logIntoWindow("CTG : EXISTS " + catpath);
@@ -416,6 +447,7 @@ class horeca_Import:
         # print(catname , catpath , parent  , source)
 
     def addProdToDb(self,proddata):
+
         # logIntoWindow("Inserting Prod to db ");
 
         sql = 'INSERT INTO `extern_products` ';
@@ -425,6 +457,7 @@ class horeca_Import:
         self.queryDb(sql , val)
 
     def updateProdToDb(self,idprod , proddata):
+
         sql = 'UPDATE `extern_products` SET ';
         
         sql = sql + ' `name` = %s ,  `manufacturer` = %s , `url` = %s , `stock` = %s , `availability` = %s , `price` = %s , `sale` = %s , `desc` = %s , `images` = %s , `found` = 1 ';
@@ -437,7 +470,13 @@ class horeca_Import:
         self.queryDb(sql , val)
     
     def checkAndAddProdToDb(self,proddata):
+
         check = self.fetchFromDb("SELECT * FROM `extern_products` WHERE sku_manuf LIKE \""+proddata['sku_manuf']+"\" AND source LIKE \""+proddata['source']+"\" ;");
+        if self.isDemo :
+            self.addProdToDb(proddata)
+            self.updateProgressBar()
+            return 1
+
         if len(check):
             self.updateProdToDb(check[0]['id'],proddata);
             self.updateProdMeta(check[0]['id'],proddata)
@@ -489,7 +528,7 @@ class horeca_Import:
         # else:
             # insertCatRel(idprod , proddata)
 
-    def initAppl(self , source , doSync , stopSync ):
-        windowHelpers.initLog(source , doSync , stopSync , self.initSourceMissing)
+    def initAppl(self , source , updateClass ):
+        windowHelpers.initLog(source , updateClass , self.initSourceMissing)
 
 
