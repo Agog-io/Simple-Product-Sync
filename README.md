@@ -23,7 +23,7 @@ Import [Database.sql](https://github.com/Agog-io/Simple-Product-Sync/blob/main/D
 
 Provide [config copy.json](https://github.com/Agog-io/Simple-Product-Sync/blob/main/config%20copy.json "config copy.json") with the appropriate sFTP details (used for uploading images)
 
-[example_run_scrape.py](https://github.com/Agog-io/Simple-Product-Sync/blob/main/example_run_scrape.py "example_run_scrape.py") provides a commented example with exactly how to get this running. Use this as the sceleton to your use case.
+[example_run_scrape.py](https://github.com/Agog-io/Simple-Product-Sync/blob/main/example_run_scrape.py "example_run_scrape.py") provides a commented example with exactly how to get this running. Use this as the sceleton to your use case. This is the file you run to execute the program. 
 
 [product_sync.py](https://github.com/Agog-io/Simple-Product-Sync/blob/main/product_sync.py "product_sync.py") contains all the updating logic in the product_sync class.
 
