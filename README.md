@@ -34,4 +34,4 @@ Currently this works only on windows but [logging_window.py](https://github.com/
 
 ## Integrations
 
-Currently I have created a Prestashop integration that adds and syncs products from the resulting database. To install it take the product_geniko_import folder and intall it like any other prestashop plugin
+Currently I have created a Prestashop integration that adds and syncs products from the resulting database. To install it take the product_geniko_import folder and install it like any other prestashop module.
