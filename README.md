@@ -31,3 +31,7 @@ Provide [config copy.json](https://github.com/Agog-io/Simple-Product-Sync/blob/m
 [logging_window.py](https://github.com/Agog-io/Simple-Product-Sync/blob/main/logging_window.py "logging_window.py") is the implementation of the logging window.
 
 Currently this works only on windows but [logging_window.py](https://github.com/Agog-io/Simple-Product-Sync/blob/main/logging_window.py "logging_window.py") and all the functions related to the loging window can be easily changed to run on different platforms.
+
+## Integrations
+
+Currently I have created a Prestashop integration that adds and syncs products from the resulting database. To install it take the product_geniko_import folder and intall it like any other prestashop plugin
